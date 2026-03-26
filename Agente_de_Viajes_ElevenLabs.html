@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crea un Agente de Viajes con ElevenLabs — Guía Paso a Paso</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --blue:       #004BFF;
+    --blue-dark:  #0038CC;
+    --blue-deep:  #002899;
+    --blue-light: #EBF0FF;
+    --blue-mid:   #C5D4FF;
+    --blue-soft:  #F0F4FF;
+    --cyan:       #00C2FF;
+    --violet:     #7B5CF5;
+    --amber:      #FF9500;
+    --rose:       #FF3B5C;
+    --green:      #00C48C;
+    --teal:       #00B4A0;
+    --bg:         #FFFFFF;
+    --surface:    #F7F9FF;
+    --surface2:   #EFF3FF;
+    --border:     rgba(0,75,255,0.10);
+    --border2:    rgba(0,75,255,0.18);
+    --text:       #0A0F2E;
+    --muted:      #5A6380;
+    --muted2:     #9AA0B8;
+    --font: 'Poppins', sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .wrap { max-width: 800px; margin: 0 auto; padding: 0 28px; }
+
+  .hero {
+    padding: 64px 0 52px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 700px; height: 340px;
+    background: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(0,75,255,0.07) 0%, transparent 100%);
+    pointer-events: none;
+  }
+  .pill {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--blue-light); border: 1px solid var(--blue-mid);
+    color: var(--blue); font-size: 11px; font-weight: 600;
+    padding: 5px 16px; border-radius: 100px;
+    margin-bottom: 22px; letter-spacing: 0.07em; text-transform: uppercase;
+    animation: fadeDown 0.5s ease both;
+  }
+  .pill-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--blue); flex-shrink: 0;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)}
+  }
+  .hero h1 {
+    font-size: clamp(30px,5.5vw,50px); font-weight: 800;
+    line-height: 1.1; letter-spacing: -0.025em;
+    margin-bottom: 14px; color: var(--text);
+    animation: fadeDown 0.5s 0.1s ease both;
+  }
+  .hero h1 em { font-style: normal; color: var(--blue); }
+  .hero-sub {
+    font-size: 15px; font-weight: 400; color: var(--muted);
+    max-width: 480px; margin: 0 auto 28px;
+    animation: fadeDown 0.5s 0.2s ease both;
+  }
+  .hero-chips {
+    display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
+    animation: fadeDown 0.5s 0.3s ease both;
+  }
+  .chip {
+    font-size: 12px; font-weight: 500;
+    background: var(--surface); border: 1px solid var(--border2);
+    color: var(--muted); padding: 5px 14px; border-radius: 8px;
+  }
+
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--blue-mid), transparent);
+    margin: 8px 0 44px;
+  }
+
+  .case-header {
+    background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dark) 100%);
+    border-radius: 16px; padding: 24px 28px; margin-bottom: 48px;
+    display: flex; align-items: flex-start; gap: 20px;
+    animation: fadeUp 0.5s 0.35s ease both;
+    position: relative; overflow: hidden;
+  }
+  .case-header::after {
+    content: ''; position: absolute; top: -40px; right: -40px;
+    width: 160px; height: 160px; border-radius: 50%;
+    background: rgba(255,255,255,0.06); pointer-events: none;
+  }
+  .case-icon {
+    width: 48px; height: 48px; border-radius: 12px;
+    background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+  }
+  .case-label { font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.6); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 4px; }
+  .case-title { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 5px; }
+  .case-desc { font-size: 13px; font-weight: 300; color: rgba(255,255,255,0.75); line-height: 1.55; }
+
+  .steps { display: flex; flex-direction: column; }
+  .step {
+    display: grid; grid-template-columns: 52px 1fr; gap: 0 18px;
+    opacity: 0; transform: translateY(18px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .step.visible { opacity: 1; transform: translateY(0); }
+  .step-left { display: flex; flex-direction: column; align-items: center; }
+  .step-num-wrap {
+    width: 48px; height: 48px; flex-shrink: 0; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px; font-weight: 700; position: relative; z-index: 1;
+  }
+  .step-num-wrap.s1 { background: var(--blue-light); border: 1.5px solid var(--blue); color: var(--blue); }
+  .step-num-wrap.s2 { background: #E6F8FF; border: 1.5px solid var(--cyan); color: #007FAA; }
+  .step-num-wrap.s3 { background: #FFF5E6; border: 1.5px solid var(--amber); color: #CC7700; }
+  .step-num-wrap.s4 { background: #F0EBFF; border: 1.5px solid var(--violet); color: var(--violet); }
+  .step-num-wrap.s5 { background: #E6FBF7; border: 1.5px solid var(--teal); color: #007A6E; }
+  .step-line {
+    flex: 1; width: 2px; min-height: 28px;
+    background: linear-gradient(to bottom, var(--blue-mid), transparent);
+    margin: 6px 0; border-radius: 2px;
+  }
+  .step:last-child .step-line { display: none; }
+  .step-body { padding-bottom: 36px; }
+  .step-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 5px; padding-top: 12px; }
+  .step-label.s1 { color: var(--blue); }
+  .step-label.s2 { color: #007FAA; }
+  .step-label.s3 { color: #CC7700; }
+  .step-label.s4 { color: var(--violet); }
+  .step-label.s5 { color: #007A6E; }
+  .step-title { font-size: 19px; font-weight: 700; margin-bottom: 8px; line-height: 1.25; color: var(--text); }
+  .step-desc { font-size: 14px; font-weight: 400; color: var(--muted); line-height: 1.7; margin-bottom: 14px; }
+
+  .info-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+  .info-item {
+    display: flex; gap: 14px; align-items: flex-start;
+    background: var(--surface); border: 1px solid var(--border2); border-radius: 8px; padding: 13px 16px;
+  }
+  .info-num { font-size: 12px; font-weight: 700; color: var(--blue); min-width: 22px; padding-top: 1px; }
+  .info-text { font-size: 13px; font-weight: 400; color: var(--muted); line-height: 1.55; }
+  .info-text strong { color: var(--text); font-weight: 600; }
+
+  .config-card {
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-left: 3px solid var(--cyan); border-radius: 8px; padding: 16px 18px; margin-bottom: 12px;
+  }
+  .config-title { font-size: 10px; font-weight: 700; color: #007FAA; letter-spacing: 0.09em; text-transform: uppercase; margin-bottom: 12px; }
+  .config-rows { display: flex; flex-direction: column; gap: 7px; }
+  .config-row { display: flex; gap: 10px; font-size: 13px; align-items: baseline; }
+  .cfg-key { color: var(--muted); font-weight: 500; min-width: 150px; flex-shrink: 0; }
+  .cfg-val { color: var(--blue-dark); font-weight: 500; }
+  .cfg-tag {
+    display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 4px;
+    background: var(--blue-light); color: var(--blue); margin-left: 6px;
+  }
+
+  .prompt-card { background: var(--blue-soft); border: 1px solid var(--blue-mid); border-radius: 12px; overflow: hidden; margin-bottom: 12px; }
+  .prompt-header {
+    padding: 10px 16px; border-bottom: 1px solid var(--blue-mid);
+    display: flex; align-items: center; gap: 8px; background: var(--blue-light);
+    font-size: 11px; font-weight: 600; color: var(--blue); letter-spacing: 0.07em; text-transform: uppercase;
+  }
+  .prompt-body { padding: 18px 20px; }
+  .prompt-intro { font-size: 13px; font-weight: 400; color: var(--blue-dark); line-height: 1.7; margin-bottom: 14px; font-style: italic; }
+  .prompt-parts { display: flex; flex-direction: column; gap: 8px; }
+  .prompt-part {
+    display: flex; gap: 12px; align-items: flex-start;
+    background: #fff; border: 1px solid var(--border2); border-radius: 8px; padding: 11px 14px;
+  }
+  .part-letter { font-size: 12px; font-weight: 700; color: var(--blue); min-width: 18px; }
+  .part-text { font-size: 13px; font-weight: 400; color: var(--text); line-height: 1.5; }
+  .part-text strong { color: var(--blue); font-weight: 600; }
+
+  .verify-card {
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-left: 3px solid var(--amber); border-radius: 8px; padding: 16px 18px; margin-bottom: 12px;
+  }
+  .verify-title { font-size: 10px; font-weight: 700; color: #CC7700; letter-spacing: 0.09em; text-transform: uppercase; margin-bottom: 10px; }
+  .verify-formula { font-size: 13px; font-weight: 400; color: var(--text); line-height: 2.1; }
+  .v-label { color: var(--muted); min-width: 140px; display: inline-block; }
+  .v-val { color: var(--blue-dark); }
+  .v-result { color: var(--green); font-weight: 600; }
+
+  .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .result-card { border-radius: 12px; padding: 16px 18px; }
+  .result-card.win { background: #EDFAF5; border: 1px solid #A3E6CC; }
+  .result-card.info { background: #EBF0FF; border: 1px solid #C5D4FF; }
+  .rc-label { font-size: 10px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; margin-bottom: 4px; }
+  .rc-label.win { color: var(--green); }
+  .rc-label.info { color: var(--blue); }
+  .rc-name { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+  .rc-stat { font-size: 12px; font-weight: 600; }
+  .rc-stat.win { color: var(--green); }
+  .rc-stat.info { color: var(--blue); }
+
+  .tip-box {
+    background: #EDFAF5; border: 1px solid #A3E6CC; border-radius: 10px;
+    padding: 14px 18px; margin-bottom: 12px; font-size: 13px; color: #006E50; line-height: 1.6;
+  }
+  .tip-box strong { color: #00A374; }
+
+  .warn-box {
+    background: #FFF5E6; border: 1px solid #FFD199; border-radius: 10px;
+    padding: 14px 18px; margin-bottom: 12px; font-size: 13px; color: #995700; line-height: 1.6;
+  }
+  .warn-box strong { color: #CC7700; }
+
+  .agent-section { margin-top: 52px; margin-bottom: 64px; }
+  .section-eyebrow { font-size: 10px; font-weight: 700; color: var(--blue); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 6px; }
+  .section-heading { font-size: 26px; font-weight: 800; margin-bottom: 6px; line-height: 1.2; color: var(--text); }
+  .section-sub { font-size: 14px; color: var(--muted); margin-bottom: 24px; font-weight: 400; }
+
+  .agent-frame { background: #0D1330; border-radius: 16px; overflow: hidden; border: 1px solid rgba(0,75,255,0.3); }
+  .agent-topbar { padding: 11px 18px; background: #12183A; display: flex; align-items: center; gap: 8px; }
+  .agent-topbar span { font-size: 11px; color: #5A6A9A; margin-left: 10px; font-weight: 400; }
+  .agent-inner { padding: 18px; }
+
+  .status-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 16px; }
+  .status-card { background: #161D45; border: 1px solid rgba(0,75,255,0.25); border-radius: 10px; padding: 14px 12px; }
+  .status-l { font-size: 9px; font-weight: 600; color: #4A5A90; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+  .status-v { font-size: 15px; font-weight: 700; color: #fff; }
+  .status-d { font-size: 10px; font-weight: 500; margin-top: 2px; }
+
+  .chat-preview { background: #0A1028; border-radius: 10px; border: 1px solid rgba(0,75,255,0.2); padding: 16px; margin-bottom: 12px; }
+  .chat-label { font-size: 9px; font-weight: 600; color: #4A5A90; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 12px; }
+  .chat-messages { display: flex; flex-direction: column; gap: 10px; }
+  .msg { display: flex; gap: 10px; align-items: flex-start; }
+  .msg-avatar {
+    width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+  }
+  .msg-avatar.user { background: #1E2A5E; color: #7A8FE0; }
+  .msg-avatar.agent { background: rgba(0,75,255,0.25); color: #7BA8FF; }
+  .msg-bubble { border-radius: 10px; padding: 9px 13px; font-size: 12px; line-height: 1.55; max-width: 85%; }
+  .msg-bubble.user { background: #1E2A5E; color: #C8D4FF; }
+  .msg-bubble.agent { background: rgba(0,75,255,0.15); color: #A8C0FF; border: 1px solid rgba(0,75,255,0.2); }
+
+  .cfg-table-wrap { overflow-x: auto; margin-top: 12px; }
+  .cfg-table { width: 100%; font-size: 11px; border-collapse: collapse; min-width: 380px; }
+  .cfg-table th { padding: 6px 10px; text-align: left; color: #4A5A90; font-size: 10px; font-weight: 600; border-bottom: 1px solid rgba(0,75,255,0.15); text-transform: uppercase; letter-spacing: 0.06em; }
+  .cfg-table td { padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); color: #C8D0F0; font-size: 11px; }
+  .cfg-table tr:last-child td { border-bottom: none; }
+  .badge { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 4px; }
+  .badge-g { background: rgba(0,196,140,0.15); color: #00C48C; }
+  .badge-b { background: rgba(0,75,255,0.2); color: #7BA8FF; }
+  .badge-a { background: rgba(255,149,0,0.15); color: #FFB547; }
+
+  .footer { padding: 24px 0 44px; text-align: center; }
+  .footer-text { font-size: 12px; color: var(--muted2); }
+  .footer-text a { color: var(--blue); text-decoration: none; font-weight: 500; }
+
+  @keyframes fadeDown { from{opacity:0;transform:translateY(-14px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fadeUp   { from{opacity:0;transform:translateY(16px)}  to{opacity:1;transform:translateY(0)} }
+
+  @media (max-width: 580px) {
+    .status-row { grid-template-columns: 1fr 1fr; }
+    .result-grid { grid-template-columns: 1fr; }
+    .case-header { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="pill"><span class="pill-dot"></span>Guía práctica · ElevenLabs IA</div>
+  <h1>Crea un <em>Agente de Viajes</em><br>con Inteligencia Artificial</h1>
+  <p class="hero-sub">Sin código. Sin servidores. Solo configura, escribe el prompt y lanza un asistente de voz que planifica viajes en tiempo real.</p>
+  <div class="hero-chips">
+    <span class="chip">✦ Agente conversacional</span>
+    <span class="chip">✦ Voz realista IA</span>
+    <span class="chip">✦ Sin programar</span>
+    <span class="chip">✦ ElevenLabs</span>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<div class="case-header">
+  <div class="case-icon">✈️</div>
+  <div>
+    <div class="case-label">Caso hipotético</div>
+    <div class="case-title">Agente de voz para agencia de viajes — "TravelBot Latam"</div>
+    <div class="case-desc">Imagina que trabajas en una agencia de viajes y quieres ofrecer un asistente 24/7 que atienda clientes por voz: responda preguntas sobre destinos, recomiende itinerarios y recoja datos de contacto — todo sin contratar un call center. Con ElevenLabs lo configuras en menos de 30 minutos.</div>
+  </div>
+</div>
+
+<div class="steps">
+
+<!-- PASO 1 -->
+<div class="step">
+  <div class="step-left">
+    <div class="step-num-wrap s1">1</div>
+    <div class="step-line"></div>
+  </div>
+  <div class="step-body">
+    <div class="step-label s1">Paso 01 · Crear la cuenta</div>
+    <div class="step-title">Regístrate en ElevenLabs (es gratis)</div>
+    <div class="step-desc">ElevenLabs ofrece un plan gratuito con minutos suficientes para practicar. Ve a <strong style="color: var(--text);">elevenlabs.io</strong>, crea una cuenta con tu correo y confirma el email.</div>
+    <div class="info-list">
+      <div class="info-item">
+        <span class="info-num">01</span>
+        <span class="info-text">Abre <strong>elevenlabs.io</strong> en tu navegador y haz clic en <strong>"Sign Up"</strong> (arriba a la derecha).</span>
+      </div>
+      <div class="info-item">
+        <span class="info-num">02</span>
+        <span class="info-text">Ingresa tu correo y una contraseña, o usa <strong>Iniciar sesión con Google</strong> para agilizar el proceso.</span>
+      </div>
+      <div class="info-item">
+        <span class="info-num">03</span>
+        <span class="info-text">Confirma tu correo si el sistema lo pide. Luego entra al <strong>panel principal (dashboard)</strong> de ElevenLabs.</span>
+      </div>
+    </div>
+    <div class="tip-box">
+      <strong>💡 Tip:</strong> El plan Free incluye hasta 10,000 caracteres/mes de texto a voz y acceso completo a la función de Agentes. Es más que suficiente para este ejercicio.
+    </div>
+  </div>
+</div>
+
+<!-- PASO 2 -->
+<div class="step">
+  <div class="step-left">
+    <div class="step-num-wrap s2">2</div>
+    <div class="step-line"></div>
+  </div>
+  <div class="step-body">
+    <div class="step-label s2">Paso 02 · Crear el agente</div>
+    <div class="step-title">Abre "Agents" y crea uno nuevo</div>
+    <div class="step-desc">Desde el panel principal de ElevenLabs, navega a la sección de Agentes y crea uno en blanco. Es el corazón de tu asistente de viajes.</div>
+    <div class="info-list">
+      <div class="info-item">
+        <span class="info-num">01</span>
+        <span class="info-text">En el menú lateral izquierdo, busca la sección <strong>"Agents"</strong> o <strong>"Conversational AI"</strong> y haz clic en ella.</span>
+      </div>
+      <div class="info-item">
+        <span class="info-num">02</span>
+        <span class="info-text">Haz clic en el botón <strong>"+ Create Agent"</strong>. Selecciona la opción <strong>"Blank Template"</strong> (plantilla en blanco).</span>
+      </div>
+      <div class="info-item">
+        <span class="info-num">03</span>
+        <span class="info-text">Ponle el nombre <strong>"TravelBot Latam"</strong> (o el nombre de tu agencia). Confirma y accede a la pantalla de configuración.</span>
+      </div>
+    </div>
+    <div class="config-card">
+      <div class="config-title">⚙️ Ajustes iniciales recomendados</div>
+      <div class="config-rows">
+        <div class="config-row"><span class="cfg-key">Nombre del agente</span><span class="cfg-val">TravelBot Latam</span></div>
+        <div class="config-row"><span class="cfg-key">Idioma principal</span><span class="cfg-val">Español (Spanish)</span></div>
+        <div class="config-row"><span class="cfg-key">Template</span><span class="cfg-val">Blank Template <span class="cfg-tag">Recomendado</span></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PASO 3 -->
+<div class="step">
+  <div class="step-left">
+    <div class="step-num-wrap s3">3</div>
+    <div class="step-line"></div>
+  </div>
+  <div class="step-body">
+    <div class="step-label s3">Paso 03 · Escribir el System Prompt</div>
+    <div class="step-title">Define la personalidad y misión del agente</div>
+    <div class="step-desc">El System Prompt le dice al agente <strong style="color: var(--text);">quién es</strong>, <strong style="color: var(--text);">cómo debe hablar</strong> y <strong style="color: var(--text);">qué puede hacer</strong>. Es el paso más importante. Copia y adapta este modelo:</div>
+    <div class="prompt-card">
+      <div class="prompt-header">✦ &nbsp;System Prompt — cópialo en el campo "Agent Instructions"</div>
+      <div class="prompt-body">
+        <p class="prompt-intro">"Eres TravelBot, el asistente virtual de viajes de la agencia TravelBot Latam. Tu misión es ayudar a los clientes a planificar sus viajes de forma amigable, eficiente y personalizada."</p>
+        <div class="prompt-parts">
+          <div class="prompt-part"><span class="part-letter">(a)</span><span class="part-text"><strong>Tu personalidad:</strong> eres entusiasta, amable y conocedor de destinos turísticos en América Latina, Europa y el Caribe. Usas un tono cálido y cercano, como un amigo que ha viajado mucho.</span></div>
+          <div class="prompt-part"><span class="part-letter">(b)</span><span class="part-text"><strong>Tus capacidades:</strong> puedes recomendar destinos según presupuesto y preferencias, sugerir itinerarios de 5, 7 o 10 días, y orientar sobre temporadas ideales para viajar.</span></div>
+          <div class="prompt-part"><span class="part-letter">(c)</span><span class="part-text"><strong>Lo que debes recoger:</strong> antes de recomendar, pregunta el destino de interés, fechas aproximadas, número de viajeros y presupuesto estimado.</span></div>
+          <div class="prompt-part"><span class="part-letter">(d)</span><span class="part-text"><strong>Tus límites:</strong> si el cliente quiere reservar, dile que un agente humano lo contactará en menos de 2 horas. No inventes precios exactos de tiquetes aéreos.</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="warn-box">
+      <strong>⚠️ Importante:</strong> Escribe este prompt en el campo llamado <strong>"System Prompt"</strong> o <strong>"Agent Instructions"</strong> dentro de la pestaña "Agent". No lo escribas en el chat de prueba.
+    </div>
+  </div>
+</div>
+
+<!-- PASO 4 -->
+<div class="step">
+  <div class="step-left">
+    <div class="step-num-wrap s4">4</div>
+    <div class="step-line"></div>
+  </div>
+  <div class="step-body">
+    <div class="step-label s4">Paso 04 · Configurar la voz</div>
+    <div class="step-title">Elige la voz perfecta para tu agente</div>
+    <div class="step-desc">ElevenLabs tiene una biblioteca de voces realistas en español. Ve a la pestaña <strong style="color: var(--text);">"Voice"</strong> y elige la que mejor encaje con el perfil de tu agencia.</div>
+    <div class="config-card">
+      <div class="config-title">🎙️ Configuración de voz recomendada</div>
+      <div class="config-rows">
+        <div class="config-row"><span class="cfg-key">Voz sugerida</span><span class="cfg-val">Valentina o Sofia (español neutro)</span></div>
+        <div class="config-row"><span class="cfg-key">Idioma</span><span class="cfg-val">Spanish</span></div>
+        <div class="config-row"><span class="cfg-key">Stability</span><span class="cfg-val">0.5 – 0.7 <span class="cfg-tag">Recomendado</span></span></div>
+        <div class="config-row"><span class="cfg-key">Similarity Boost</span><span class="cfg-val">0.75</span></div>
+        <div class="config-row"><span class="cfg-key">Speed</span><span class="cfg-val">1.0 (ritmo normal)</span></div>
+      </div>
+    </div>
+    <div class="info-list">
+      <div class="info-item">
+        <span class="info-num">01</span>
+        <span class="info-text">Haz clic en <strong>"Voice Library"</strong> para explorar todas las voces disponibles. Filtra por idioma <strong>"Spanish"</strong>.</span>
+      </div>
+      <div class="info-item">
+        <span class="info-num">02</span>
+        <span class="info-text">Previsualiza voces haciendo clic en el ícono de reproducción. Elige la que suene más natural y profesional para una agencia de viajes.</span>
+      </div>
+      <div class="info-item">
+        <span class="info-num">03</span>
+        <span class="info-text">Ajusta <strong>Stability</strong> (consistencia de la voz) y <strong>Similarity Boost</strong> (fidelidad al original). Valores medios funcionan bien para atención al cliente.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PASO 5 -->
+<div class="step">
+  <div class="step-left">
+    <div class="step-num-wrap s5">5</div>
+    <div class="step-line"></div>
+  </div>
+  <div class="step-body">
+    <div class="step-label s5">Paso 05 · Probar y publicar</div>
+    <div class="step-title">Testea la conversación y obtén tu enlace</div>
+    <div class="step-desc">Antes de compartir el agente, pruébalo desde el panel integrado. ElevenLabs tiene una ventana de chat y voz para probar en tiempo real.</div>
+    <div class="verify-card">
+      <div class="verify-title">✅ Checklist de prueba — verifica estos puntos</div>
+      <div class="verify-formula">
+        <span class="v-label">Saludo inicial</span><span class="v-val">¿El agente se presenta con su nombre?</span> → <span class="v-result">Debe decir "TravelBot" ✓</span><br>
+        <span class="v-label">Preguntas clave</span><span class="v-val">¿Pregunta destino, fechas y presupuesto?</span> → <span class="v-result">Flujo correcto ✓</span><br>
+        <span class="v-label">Límites</span><span class="v-val">¿Evita inventar precios de tiquetes?</span> → <span class="v-result">Respeta instrucciones ✓</span><br>
+        <span class="v-label">Idioma</span><span class="v-val">¿Responde completamente en español?</span> → <span class="v-result">Configurado ✓</span>
+      </div>
+    </div>
+    <div class="info-list">
+      <div class="info-item">
+        <span class="info-num">01</span>
+        <span class="info-text">Una vez satisfecho con las pruebas, haz clic en <strong>"Deploy"</strong> o <strong>"Publish"</strong>. ElevenLabs generará un <strong>widget URL</strong> para tu agente.</span>
+      </div>
+      <div class="info-item">
+        <span class="info-num">02</span>
+        <span class="info-text">Copia ese enlace y compártelo, o incrústalo en una página web usando el código <strong>embed</strong> que proporciona la plataforma.</span>
+      </div>
+    </div>
+    <div class="result-grid">
+      <div class="result-card win">
+        <div class="rc-label win">Logro alcanzado</div>
+        <div class="rc-name">Agente activo</div>
+        <div class="rc-stat win">Disponible 24/7 sin código</div>
+      </div>
+      <div class="result-card info">
+        <div class="rc-label info">Siguiente nivel</div>
+        <div class="rc-name">Agregar herramientas</div>
+        <div class="rc-stat info">Webhooks y base de conocimiento</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<!-- AGENT PREVIEW -->
+<section class="agent-section">
+  <div class="section-eyebrow">Resultado final</div>
+  <div class="section-heading">Así luce tu agente en acción</div>
+  <div class="section-sub">Esto es lo que verá y escuchará tu cliente al interactuar con TravelBot Latam una vez publicado.</div>
+
+  <div style="text-align: center; margin: 8px 0 32px;">
+    <p style="font-size: 14px; color: var(--muted); margin-bottom: 24px;">
+      👇 Haz clic en el botón para hablar con el agente de viajes en tiempo real
+    </p>
+    <a href="https://elevenlabs.io/app/talk-to?agent_id=agent_4401kg7vyp99fccvqr0k4gev7sk4&branch_id=agtbrch_6401kg7vyqypfbns96c0ryxy4xgn" target="_blank" style="display: inline-block; text-decoration: none;">
+      <div style="
+        position: relative;
+        width: 260px;
+        height: 260px;
+        margin: 0 auto;
+        cursor: pointer;
+      ">
+        <!-- Animated orb background -->
+        <div style="
+          position: absolute; inset: 0; border-radius: 50%;
+          background: conic-gradient(from 0deg, #00C2FF, #0066FF, #00E5CC, #0099FF, #0044CC, #00C2FF);
+          animation: spinOrb 6s linear infinite;
+          filter: blur(2px);
+        "></div>
+        <div style="
+          position: absolute; inset: 18px; border-radius: 50%;
+          background: conic-gradient(from 180deg, #00BFFF88, #003FCC88, #00E5CC88, #0077FF88, #00BFFF88);
+          animation: spinOrb 4s linear infinite reverse;
+          filter: blur(4px);
+        "></div>
+        <div style="
+          position: absolute; inset: 36px; border-radius: 50%;
+          background: radial-gradient(circle at 40% 35%, #AAEEFF, #0055EE 60%, #003399);
+          opacity: 0.85;
+        "></div>
+        <!-- Center pill button -->
+        <div style="
+          position: absolute;
+          top: 50%; left: 50%;
+          transform: translate(-50%, -50%);
+          background: rgba(255,255,255,0.92);
+          border-radius: 100px;
+          padding: 10px 20px;
+          display: flex; align-items: center; gap: 8px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+          white-space: nowrap;
+          font-family: 'Poppins', sans-serif;
+          font-size: 13px;
+          font-weight: 600;
+          color: #0A0F2E;
+        ">
+          <span style="font-size: 16px;">🎙</span> Llamar al agente de IA
+        </div>
+      </div>
+      <p style="margin-top: 12px; font-size: 11px; color: var(--muted2); font-family: 'Poppins', sans-serif;">
+        Powered by <strong style="color: var(--teal);">ElevenAgents</strong>
+      </p>
+    </a>
+  </div>
+
+  <style>
+    @keyframes spinOrb { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  </style>
+</section>
+
+<!-- PASO A PASO COMPLETO -->
+<section style="margin-top: 52px; margin-bottom: 64px;">
+  <div class="section-eyebrow">Guía completa</div>
+  <div class="section-heading">Paso a paso visual</div>
+  <div class="section-sub">Sigue cada pantalla en detalle para crear tu agente de viajes desde cero en ElevenLabs.</div>
+  <iframe src="https://scribehow.com/embed/Crea_un_agente_de_viajes_con_ElevenLabsio__vnHqfFmVR8mlhC2p8bOVxw?removeLogo=true" width="100%" height="551" allow="fullscreen" style="aspect-ratio: 1 / 1; border: 0; min-height: 480px; border-radius: 14px; display: block;"></iframe>
+</section>
+
+<div class="footer">
+  <p class="footer-text">Guía didáctica · Creada con <a href="https://claude.ai">Por Cesalab</a> · con Claude AI y ElevenLabs</p>
+</div>
+
+</div>
+
+<script>
+  const steps = document.querySelectorAll('.step');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), i * 80);
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  steps.forEach(s => obs.observe(s));
+</script>
+
+</body>
+</html>
